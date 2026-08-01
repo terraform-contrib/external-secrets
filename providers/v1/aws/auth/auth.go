@@ -173,6 +173,80 @@ func constructCredsProvider(ctx context.Context, prov *esv1.AWSProvider, isClust
 	}
 }
 
+// SessionOpts define options for NewSessionFromAuth.
+type SessionOpts struct {
+	// Auth is a standalone AWSAuth block, i.e. one that is not reached through
+	// a SecretStore with an AWS provider.
+	Auth esv1.AWSAuth
+	// Role is an optional Role ARN to assume once credentials are established.
+	Role string
+	// Region the config is pinned to.
+	Region string
+	// StoreKind is the kind of the enclosing store. It decides whether a
+	// referenced Secret or ServiceAccount may be resolved across namespaces.
+	// Pass resolvers.EmptyStoreKind when there is no enclosing store.
+	StoreKind   string
+	Kube        client.Client
+	Namespace   string
+	AssumeRoler STSProvider
+	JWTProvider jwtProviderFactory
+}
+
+// NewSessionFromAuth creates a new aws config from a standalone AWSAuth block.
+// Use it when an AWSAuth is embedded somewhere other than the AWS provider of a
+// SecretStore, such as the backend configuration of another provider.
+// It uses the following authentication mechanisms in order:
+// * service-account token authentication via AssumeRoleWithWebIdentity
+// * static credentials from a Kind=Secret, optionally with doing a AssumeRole.
+// * sdk default provider chain, see: https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default
+func NewSessionFromAuth(ctx context.Context, opts SessionOpts) (*aws.Config, error) {
+	var (
+		credsProvider aws.CredentialsProvider
+		err           error
+	)
+	isClusterKind := opts.StoreKind == esv1.ClusterSecretStoreKind
+
+	// Mirror the provider path (constructCredsProvider): the mechanisms are
+	// mutually exclusive and service-account tokens win, so a spec that sets
+	// both never silently authenticates with the static credentials.
+	switch {
+	case opts.Auth.JWTAuth != nil:
+		credsProvider, err = credsFromServiceAccount(ctx, opts.Auth, opts.Region, isClusterKind, opts.Kube, opts.Namespace, opts.JWTProvider)
+		if err != nil {
+			return nil, err
+		}
+	case opts.Auth.SecretRef != nil:
+		log.V(1).Info("using credentials from secretRef")
+		credsProvider, err = credsFromSecretRef(ctx, opts.Auth, opts.StoreKind, opts.Kube, opts.Namespace)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Build config options - use WithCredentialsProvider during loading
+	// to prevent the default credential chain (including EC2 IMDS) from being used
+	// when explicit credentials are provided
+	var loadCfgOpts []func(*config.LoadOptions) error
+	if credsProvider != nil {
+		loadCfgOpts = append(loadCfgOpts, config.WithCredentialsProvider(credsProvider))
+	}
+	if opts.Region != "" {
+		loadCfgOpts = append(loadCfgOpts, config.WithRegion(opts.Region))
+	}
+
+	awscfg, err := config.LoadDefaultConfig(ctx, loadCfgOpts...)
+	if err != nil {
+		return nil, err
+	}
+
+	if opts.Role != "" {
+		stsclient := opts.AssumeRoler(&awscfg)
+		awscfg.Credentials = stscreds.NewAssumeRoleProvider(stsclient, opts.Role)
+	}
+	log.Info("using aws config", "region", awscfg.Region, "credentials", credentialsProviderName(awscfg.Credentials))
+	return &awscfg, nil
+}
+
 // NewGeneratorSession creates a new aws session based on the provided store
 // it uses the following authentication mechanisms in order:
 // * service-account token authentication via AssumeRoleWithWebIdentity
@@ -187,52 +261,18 @@ func NewGeneratorSession(
 	assumeRoler STSProvider,
 	jwtProvider jwtProviderFactory,
 ) (*aws.Config, error) {
-	var (
-		credsProvider aws.CredentialsProvider
-		err           error
-	)
-
-	// use credentials via service account token
-	jwtAuth := auth.JWTAuth
-	if jwtAuth != nil {
-		credsProvider, err = credsFromServiceAccount(ctx, auth, region, false, kube, namespace, jwtProvider)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// use credentials from secretRef
-	secretRef := auth.SecretRef
-	if secretRef != nil {
-		log.V(1).Info("using credentials from secretRef")
-		credsProvider, err = credsFromSecretRef(ctx, auth, "", kube, namespace)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Build config options - use WithCredentialsProvider during loading
-	// to prevent the default credential chain (including EC2 IMDS) from being used
-	// when explicit credentials are provided
-	var loadCfgOpts []func(*config.LoadOptions) error
-	if credsProvider != nil {
-		loadCfgOpts = append(loadCfgOpts, config.WithCredentialsProvider(credsProvider))
-	}
-	if region != "" {
-		loadCfgOpts = append(loadCfgOpts, config.WithRegion(region))
-	}
-
-	awscfg, err := config.LoadDefaultConfig(ctx, loadCfgOpts...)
-	if err != nil {
-		return nil, err
-	}
-
-	if role != "" {
-		stsclient := assumeRoler(&awscfg)
-		awscfg.Credentials = stscreds.NewAssumeRoleProvider(stsclient, role)
-	}
-	log.Info("using aws config", "region", awscfg.Region, "credentials", credentialsProviderName(awscfg.Credentials))
-	return &awscfg, nil
+	// generators have no enclosing store, so nothing may be resolved across
+	// namespaces.
+	return NewSessionFromAuth(ctx, SessionOpts{
+		Auth:        auth,
+		Role:        role,
+		Region:      region,
+		StoreKind:   resolvers.EmptyStoreKind,
+		Kube:        kube,
+		Namespace:   namespace,
+		AssumeRoler: assumeRoler,
+		JWTProvider: jwtProvider,
+	})
 }
 
 // credsFromSecretRef pulls access-key / secret-access-key from a secretRef to

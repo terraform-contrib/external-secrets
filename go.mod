@@ -61,6 +61,7 @@ replace (
 	github.com/external-secrets/external-secrets/providers/v1/scaleway => ./providers/v1/scaleway
 	github.com/external-secrets/external-secrets/providers/v1/secretserver => ./providers/v1/secretserver
 	github.com/external-secrets/external-secrets/providers/v1/senhasegura => ./providers/v1/senhasegura
+	github.com/external-secrets/external-secrets/providers/v1/terraform => ./providers/v1/terraform
 	github.com/external-secrets/external-secrets/providers/v1/vault => ./providers/v1/vault
 	github.com/external-secrets/external-secrets/providers/v1/volcengine => ./providers/v1/volcengine
 	github.com/external-secrets/external-secrets/providers/v1/webhook => ./providers/v1/webhook
@@ -125,6 +126,7 @@ require (
 	github.com/external-secrets/external-secrets/providers/v1/scaleway v0.0.0-20261021124231-db95fe1c087b
 	github.com/external-secrets/external-secrets/providers/v1/secretserver v0.0.0-20261021124231-db95fe1c087b
 	github.com/external-secrets/external-secrets/providers/v1/senhasegura v0.0.0-20261021124231-db95fe1c087b
+	github.com/external-secrets/external-secrets/providers/v1/terraform v0.0.0-00010101000000-000000000000
 	github.com/external-secrets/external-secrets/providers/v1/vault v0.0.0-20261021124231-db95fe1c087b
 	github.com/external-secrets/external-secrets/providers/v1/volcengine v0.0.0-20261021124231-db95fe1c087b
 	github.com/external-secrets/external-secrets/providers/v1/webhook v0.0.0-20261021124231-db95fe1c087b
@@ -203,6 +205,7 @@ require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/aws/aws-sdk-go v1.55.8 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.47.3 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.9 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.33.9 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.9 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.3 // indirect
@@ -213,8 +216,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.66.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.47.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.21 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.22 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.41.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.100.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.50.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.10.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.80.0 // indirect

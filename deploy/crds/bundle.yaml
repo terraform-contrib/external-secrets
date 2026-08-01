@@ -8321,6 +8321,370 @@ spec:
                         - module
                         - url
                       type: object
+                    terraform:
+                      description: Terraform configures this store to read secrets from Terraform or OpenTofu state
+                      properties:
+                        backend:
+                          description: |-
+                            Backend describes where the state file is stored. Exactly one backend
+                            must be configured.
+                          maxProperties: 1
+                          minProperties: 1
+                          properties:
+                            http:
+                              description: |-
+                                HTTP reads the state over HTTP(S), as written by the `http` backend.
+                                This also covers state served by the many HTTP-backend implementations,
+                                such as the GitLab-managed Terraform state.
+                              properties:
+                                auth:
+                                  description: |-
+                                    Auth defines how to authenticate against the endpoint. If not set the
+                                    request is sent unauthenticated.
+                                  maxProperties: 1
+                                  minProperties: 1
+                                  properties:
+                                    basic:
+                                      description: Basic authenticates with HTTP basic auth.
+                                      properties:
+                                        passwordSecretRef:
+                                          description: Password to authenticate with.
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                        usernameSecretRef:
+                                          description: Username to authenticate with.
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                      required:
+                                        - passwordSecretRef
+                                        - usernameSecretRef
+                                      type: object
+                                    bearer:
+                                      description: 'Bearer authenticates with an `Authorization: Bearer` header.'
+                                      properties:
+                                        tokenSecretRef:
+                                          description: Token sent in the Authorization header.
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                      required:
+                                        - tokenSecretRef
+                                      type: object
+                                  type: object
+                                caBundle:
+                                  description: |-
+                                    CABundle is a PEM-encoded CA bundle used to validate the endpoint
+                                    certificate.
+                                  format: byte
+                                  type: string
+                                caProvider:
+                                  description: |-
+                                    CAProvider points at a ConfigMap or Secret holding the CA bundle used to
+                                    validate the endpoint certificate.
+                                  properties:
+                                    key:
+                                      description: The key where the CA certificate can be found in the Secret or ConfigMap.
+                                      maxLength: 253
+                                      minLength: 1
+                                      pattern: ^[-._a-zA-Z0-9]+$
+                                      type: string
+                                    name:
+                                      description: The name of the object located at the provider type.
+                                      maxLength: 253
+                                      minLength: 1
+                                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                      type: string
+                                    namespace:
+                                      description: |-
+                                        The namespace the Provider type is in.
+                                        Can only be defined when used in a ClusterSecretStore.
+                                      maxLength: 63
+                                      minLength: 1
+                                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                      type: string
+                                    type:
+                                      description: The type of provider to use such as "Secret", or "ConfigMap".
+                                      enum:
+                                        - Secret
+                                        - ConfigMap
+                                      type: string
+                                  required:
+                                    - name
+                                    - type
+                                  type: object
+                                url:
+                                  description: |-
+                                    URL the state is fetched from with a GET request. This is the `address`
+                                    of the Terraform `http` backend. It must be an http or https URL; store
+                                    validation rejects anything else.
+                                  minLength: 1
+                                  type: string
+                              required:
+                                - url
+                              type: object
+                            kubernetes:
+                              description: |-
+                                Kubernetes reads the state from a Kubernetes Secret, as written by the
+                                `kubernetes` backend.
+                              properties:
+                                namespace:
+                                  description: |-
+                                    Namespace the Secret lives in. Only a ClusterSecretStore may set this;
+                                    for a SecretStore, and for a ClusterSecretStore that leaves it empty,
+                                    the namespace of the referring ExternalSecret is used.
+                                  maxLength: 63
+                                  minLength: 1
+                                  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                  type: string
+                                secretSuffix:
+                                  description: |-
+                                    SecretSuffix as configured on the Terraform backend. The state is read
+                                    from the Secret named `tfstate-{workspace}-{secretSuffix}`.
+                                  minLength: 1
+                                  type: string
+                                workspace:
+                                  default: default
+                                  description: Workspace the state belongs to.
+                                  type: string
+                              required:
+                                - secretSuffix
+                              type: object
+                            s3:
+                              description: S3 reads the state from an S3 bucket, as written by the `s3` backend.
+                              properties:
+                                auth:
+                                  description: |-
+                                    Auth defines how to authenticate against AWS. If not set, the AWS SDK
+                                    default credential chain is used, which covers IRSA and EKS Pod Identity.
+                                  properties:
+                                    jwt:
+                                      description: AWSJWTAuth stores reference to Authenticate against AWS using service account tokens.
+                                      properties:
+                                        serviceAccountRef:
+                                          description: ServiceAccountSelector is a reference to a ServiceAccount resource.
+                                          properties:
+                                            audiences:
+                                              description: |-
+                                                Audience specifies the `aud` claim for the service account token
+                                                Some providers automatically extend the audience field based on well-known annotations for workload
+                                                identity (e.g. IRSA or GCP Workload Identity)
+                                              items:
+                                                type: string
+                                              type: array
+                                            name:
+                                              description: The name of the ServiceAccount resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                Namespace of the resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          required:
+                                            - name
+                                          type: object
+                                      type: object
+                                    secretRef:
+                                      description: |-
+                                        AWSAuthSecretRef holds secret references for AWS credentials
+                                        both AccessKeyID and SecretAccessKey must be defined in order to properly authenticate.
+                                      properties:
+                                        accessKeyIDSecretRef:
+                                          description: The AccessKeyID is used for authentication
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                        secretAccessKeySecretRef:
+                                          description: The SecretAccessKey is used for authentication
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                        sessionTokenSecretRef:
+                                          description: |-
+                                            The SessionToken used for authentication
+                                            This must be defined if AccessKeyID and SecretAccessKey are temporary credentials
+                                            see: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_use-resources.html
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                      type: object
+                                  type: object
+                                bucket:
+                                  description: Bucket holding the state object.
+                                  minLength: 1
+                                  type: string
+                                endpoint:
+                                  description: |-
+                                    Endpoint overrides the S3 endpoint. Set this for S3-compatible object
+                                    stores such as MinIO or Ceph.
+                                  type: string
+                                forcePathStyle:
+                                  description: |-
+                                    ForcePathStyle addresses buckets as a path element of the endpoint
+                                    instead of a subdomain. Most S3-compatible stores require this.
+                                  type: boolean
+                                key:
+                                  description: |-
+                                    Key is the full path of the state object inside the bucket, matching the
+                                    `key` of the Terraform backend. For a non-default workspace this includes
+                                    the workspace key prefix, e.g. `env:/staging/prod/terraform.tfstate`.
+                                  minLength: 1
+                                  type: string
+                                region:
+                                  description: Region the bucket lives in.
+                                  minLength: 1
+                                  type: string
+                                role:
+                                  description: Role is a Role ARN the provider assumes before reading the object.
+                                  type: string
+                              required:
+                                - bucket
+                                - key
+                                - region
+                              type: object
+                          type: object
+                        sensitiveOnly:
+                          description: |-
+                            SensitiveOnly restricts reads to outputs that are marked `sensitive = true`
+                            in the Terraform configuration. Requesting a non-sensitive output from a
+                            store with this enabled behaves as if the output did not exist.
+                          type: boolean
+                      required:
+                        - backend
+                      type: object
                     vault:
                       description: Vault configures this store to sync secrets using the HashiCorp Vault provider.
                       properties:
@@ -21997,6 +22361,370 @@ spec:
                         - auth
                         - module
                         - url
+                      type: object
+                    terraform:
+                      description: Terraform configures this store to read secrets from Terraform or OpenTofu state
+                      properties:
+                        backend:
+                          description: |-
+                            Backend describes where the state file is stored. Exactly one backend
+                            must be configured.
+                          maxProperties: 1
+                          minProperties: 1
+                          properties:
+                            http:
+                              description: |-
+                                HTTP reads the state over HTTP(S), as written by the `http` backend.
+                                This also covers state served by the many HTTP-backend implementations,
+                                such as the GitLab-managed Terraform state.
+                              properties:
+                                auth:
+                                  description: |-
+                                    Auth defines how to authenticate against the endpoint. If not set the
+                                    request is sent unauthenticated.
+                                  maxProperties: 1
+                                  minProperties: 1
+                                  properties:
+                                    basic:
+                                      description: Basic authenticates with HTTP basic auth.
+                                      properties:
+                                        passwordSecretRef:
+                                          description: Password to authenticate with.
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                        usernameSecretRef:
+                                          description: Username to authenticate with.
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                      required:
+                                        - passwordSecretRef
+                                        - usernameSecretRef
+                                      type: object
+                                    bearer:
+                                      description: 'Bearer authenticates with an `Authorization: Bearer` header.'
+                                      properties:
+                                        tokenSecretRef:
+                                          description: Token sent in the Authorization header.
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                      required:
+                                        - tokenSecretRef
+                                      type: object
+                                  type: object
+                                caBundle:
+                                  description: |-
+                                    CABundle is a PEM-encoded CA bundle used to validate the endpoint
+                                    certificate.
+                                  format: byte
+                                  type: string
+                                caProvider:
+                                  description: |-
+                                    CAProvider points at a ConfigMap or Secret holding the CA bundle used to
+                                    validate the endpoint certificate.
+                                  properties:
+                                    key:
+                                      description: The key where the CA certificate can be found in the Secret or ConfigMap.
+                                      maxLength: 253
+                                      minLength: 1
+                                      pattern: ^[-._a-zA-Z0-9]+$
+                                      type: string
+                                    name:
+                                      description: The name of the object located at the provider type.
+                                      maxLength: 253
+                                      minLength: 1
+                                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                      type: string
+                                    namespace:
+                                      description: |-
+                                        The namespace the Provider type is in.
+                                        Can only be defined when used in a ClusterSecretStore.
+                                      maxLength: 63
+                                      minLength: 1
+                                      pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                      type: string
+                                    type:
+                                      description: The type of provider to use such as "Secret", or "ConfigMap".
+                                      enum:
+                                        - Secret
+                                        - ConfigMap
+                                      type: string
+                                  required:
+                                    - name
+                                    - type
+                                  type: object
+                                url:
+                                  description: |-
+                                    URL the state is fetched from with a GET request. This is the `address`
+                                    of the Terraform `http` backend. It must be an http or https URL; store
+                                    validation rejects anything else.
+                                  minLength: 1
+                                  type: string
+                              required:
+                                - url
+                              type: object
+                            kubernetes:
+                              description: |-
+                                Kubernetes reads the state from a Kubernetes Secret, as written by the
+                                `kubernetes` backend.
+                              properties:
+                                namespace:
+                                  description: |-
+                                    Namespace the Secret lives in. Only a ClusterSecretStore may set this;
+                                    for a SecretStore, and for a ClusterSecretStore that leaves it empty,
+                                    the namespace of the referring ExternalSecret is used.
+                                  maxLength: 63
+                                  minLength: 1
+                                  pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                  type: string
+                                secretSuffix:
+                                  description: |-
+                                    SecretSuffix as configured on the Terraform backend. The state is read
+                                    from the Secret named `tfstate-{workspace}-{secretSuffix}`.
+                                  minLength: 1
+                                  type: string
+                                workspace:
+                                  default: default
+                                  description: Workspace the state belongs to.
+                                  type: string
+                              required:
+                                - secretSuffix
+                              type: object
+                            s3:
+                              description: S3 reads the state from an S3 bucket, as written by the `s3` backend.
+                              properties:
+                                auth:
+                                  description: |-
+                                    Auth defines how to authenticate against AWS. If not set, the AWS SDK
+                                    default credential chain is used, which covers IRSA and EKS Pod Identity.
+                                  properties:
+                                    jwt:
+                                      description: AWSJWTAuth stores reference to Authenticate against AWS using service account tokens.
+                                      properties:
+                                        serviceAccountRef:
+                                          description: ServiceAccountSelector is a reference to a ServiceAccount resource.
+                                          properties:
+                                            audiences:
+                                              description: |-
+                                                Audience specifies the `aud` claim for the service account token
+                                                Some providers automatically extend the audience field based on well-known annotations for workload
+                                                identity (e.g. IRSA or GCP Workload Identity)
+                                              items:
+                                                type: string
+                                              type: array
+                                            name:
+                                              description: The name of the ServiceAccount resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                Namespace of the resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          required:
+                                            - name
+                                          type: object
+                                      type: object
+                                    secretRef:
+                                      description: |-
+                                        AWSAuthSecretRef holds secret references for AWS credentials
+                                        both AccessKeyID and SecretAccessKey must be defined in order to properly authenticate.
+                                      properties:
+                                        accessKeyIDSecretRef:
+                                          description: The AccessKeyID is used for authentication
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                        secretAccessKeySecretRef:
+                                          description: The SecretAccessKey is used for authentication
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                        sessionTokenSecretRef:
+                                          description: |-
+                                            The SessionToken used for authentication
+                                            This must be defined if AccessKeyID and SecretAccessKey are temporary credentials
+                                            see: https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_use-resources.html
+                                          properties:
+                                            key:
+                                              description: |-
+                                                A key in the referenced Secret.
+                                                Some instances of this field may be defaulted, in others it may be required.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[-._a-zA-Z0-9]+$
+                                              type: string
+                                            name:
+                                              description: The name of the Secret resource being referred to.
+                                              maxLength: 253
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                              type: string
+                                            namespace:
+                                              description: |-
+                                                The namespace of the Secret resource being referred to.
+                                                Ignored if referent is not cluster-scoped, otherwise defaults to the namespace of the referent.
+                                              maxLength: 63
+                                              minLength: 1
+                                              pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                              type: string
+                                          type: object
+                                      type: object
+                                  type: object
+                                bucket:
+                                  description: Bucket holding the state object.
+                                  minLength: 1
+                                  type: string
+                                endpoint:
+                                  description: |-
+                                    Endpoint overrides the S3 endpoint. Set this for S3-compatible object
+                                    stores such as MinIO or Ceph.
+                                  type: string
+                                forcePathStyle:
+                                  description: |-
+                                    ForcePathStyle addresses buckets as a path element of the endpoint
+                                    instead of a subdomain. Most S3-compatible stores require this.
+                                  type: boolean
+                                key:
+                                  description: |-
+                                    Key is the full path of the state object inside the bucket, matching the
+                                    `key` of the Terraform backend. For a non-default workspace this includes
+                                    the workspace key prefix, e.g. `env:/staging/prod/terraform.tfstate`.
+                                  minLength: 1
+                                  type: string
+                                region:
+                                  description: Region the bucket lives in.
+                                  minLength: 1
+                                  type: string
+                                role:
+                                  description: Role is a Role ARN the provider assumes before reading the object.
+                                  type: string
+                              required:
+                                - bucket
+                                - key
+                                - region
+                              type: object
+                          type: object
+                        sensitiveOnly:
+                          description: |-
+                            SensitiveOnly restricts reads to outputs that are marked `sensitive = true`
+                            in the Terraform configuration. Requesting a non-sensitive output from a
+                            store with this enabled behaves as if the output did not exist.
+                          type: boolean
+                      required:
+                        - backend
                       type: object
                     vault:
                       description: Vault configures this store to sync secrets using the HashiCorp Vault provider.

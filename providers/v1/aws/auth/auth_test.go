@@ -34,6 +34,7 @@ import (
 	esv1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1"
 	esmeta "github.com/external-secrets/external-secrets/apis/meta/v1"
 	fakesess "github.com/external-secrets/external-secrets/providers/v1/aws/auth/fake"
+	"github.com/external-secrets/external-secrets/runtime/esutils/resolvers"
 )
 
 const (
@@ -685,10 +686,13 @@ func TestNewGeneratorSession_CredentialProviderPriority(t *testing.T) {
 	assert.NotNil(t, cfg)
 	assert.True(t, jwtProviderCalled)
 
+	// The mechanisms are mutually exclusive and the service-account token wins,
+	// matching the provider path (constructCredsProvider); the static
+	// credentials must not silently override it.
 	creds, err := cfg.Credentials.Retrieve(ctx)
 	assert.NoError(t, err)
-	assert.Equal(t, "SECRET_KEY_ID", creds.AccessKeyID)
-	assert.Equal(t, "SECRET_ACCESS_KEY", creds.SecretAccessKey)
+	assert.Equal(t, "JWT_ACCESS_KEY", creds.AccessKeyID)
+	assert.Equal(t, "JWT_SECRET_KEY", creds.SecretAccessKey)
 }
 
 func TestNewGeneratorSession_OnlySecretRef(t *testing.T) {
@@ -830,4 +834,86 @@ func TestCredentialsProviderName(t *testing.T) {
 		assert.NotContains(t, name, secretAccessKey)
 		assert.Contains(t, name, "StaticCredentialsProvider")
 	})
+}
+
+// NewSessionFromAuth is the entry point for an AWSAuth embedded in a store that
+// is not the AWS provider. Unlike NewGeneratorSession it has an enclosing store,
+// so the namespace on a secretRef must be honored for a ClusterSecretStore and
+// ignored for everything else.
+func TestNewSessionFromAuth_StoreKindScoping(t *testing.T) {
+	ctx := context.Background()
+	k8sClient := clientfake.NewClientBuilder().Build()
+
+	assert.NoError(t, k8sClient.Create(ctx, &v1.Secret{
+		Name:      "aws-creds",
+		Namespace: "test-ns",
+		Data: map[string][]byte{
+			"access-key": []byte("LOCAL_KEY_ID"),
+			"secret-key": []byte("LOCAL_ACCESS_KEY"),
+		},
+	}))
+	assert.NoError(t, k8sClient.Create(ctx, &v1.Secret{
+		Name:      "aws-creds",
+		Namespace: otherNsName,
+		Data: map[string][]byte{
+			"access-key": []byte("REMOTE_KEY_ID"),
+			"secret-key": []byte("REMOTE_ACCESS_KEY"),
+		},
+	}))
+
+	otherNs := otherNsName
+	testCases := []struct {
+		name          string
+		storeKind     string
+		refNamespace  *string
+		expectedKeyID string
+	}{
+		{
+			name:          "cluster store honors the referenced namespace",
+			storeKind:     esv1.ClusterSecretStoreKind,
+			refNamespace:  &otherNs,
+			expectedKeyID: "REMOTE_KEY_ID",
+		},
+		{
+			name:          "cluster store without a namespace falls back to the ExternalSecret namespace",
+			storeKind:     esv1.ClusterSecretStoreKind,
+			expectedKeyID: "LOCAL_KEY_ID",
+		},
+		{
+			name:          "namespaced store ignores the referenced namespace",
+			storeKind:     esv1.SecretStoreKind,
+			refNamespace:  &otherNs,
+			expectedKeyID: "LOCAL_KEY_ID",
+		},
+		{
+			name:          "generators cannot reach across namespaces",
+			storeKind:     resolvers.EmptyStoreKind,
+			refNamespace:  &otherNs,
+			expectedKeyID: "LOCAL_KEY_ID",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg, err := NewSessionFromAuth(ctx, SessionOpts{
+				Auth: esv1.AWSAuth{
+					SecretRef: &esv1.AWSAuthSecretRef{
+						AccessKeyID:     esmeta.SecretKeySelector{Name: "aws-creds", Key: "access-key", Namespace: tc.refNamespace},
+						SecretAccessKey: esmeta.SecretKeySelector{Name: "aws-creds", Key: "secret-key", Namespace: tc.refNamespace},
+					},
+				},
+				Region:      "us-east-1",
+				StoreKind:   tc.storeKind,
+				Kube:        k8sClient,
+				Namespace:   "test-ns",
+				AssumeRoler: DefaultSTSProvider,
+				JWTProvider: DefaultJWTProvider,
+			})
+			assert.NoError(t, err)
+
+			creds, err := cfg.Credentials.Retrieve(ctx)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedKeyID, creds.AccessKeyID)
+		})
+	}
 }
