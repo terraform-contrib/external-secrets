@@ -23,7 +23,8 @@ Resource Types:
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#external-secrets.io/v1.AWSProvider">AWSProvider</a>)
+<a href="#external-secrets.io/v1.AWSProvider">AWSProvider</a>, 
+<a href="#external-secrets.io/v1.TerraformS3Backend">TerraformS3Backend</a>)
 </p>
 <p>
 <p>AWSAuth tells the controller how to do authentication with aws.
@@ -2208,6 +2209,7 @@ string
 <a href="#external-secrets.io/v1.OvhClientMTLS">OvhClientMTLS</a>, 
 <a href="#external-secrets.io/v1.PassboltProvider">PassboltProvider</a>, 
 <a href="#external-secrets.io/v1.SecretServerProvider">SecretServerProvider</a>, 
+<a href="#external-secrets.io/v1.TerraformHTTPBackend">TerraformHTTPBackend</a>, 
 <a href="#external-secrets.io/v1.VaultProvider">VaultProvider</a>)
 </p>
 <p>
@@ -12166,6 +12168,20 @@ OpenBaoProvider
 <p>OpenBao configures this store to sync secrets using the OpenBao provider.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>terraform</code></br>
+<em>
+<a href="#external-secrets.io/v1.TerraformProvider">
+TerraformProvider
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Terraform configures this store to read secrets from Terraform or OpenTofu state</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="external-secrets.io/v1.SecretStoreRef">SecretStoreRef
@@ -13078,6 +13094,484 @@ TemplateScope
 </tr><tr><td><p>&#34;Values&#34;</p></td>
 <td></td>
 </tr></tbody>
+</table>
+<h3 id="external-secrets.io/v1.TerraformBackend">TerraformBackend
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#external-secrets.io/v1.TerraformProvider">TerraformProvider</a>)
+</p>
+<p>
+<p>TerraformBackend selects the state backend to read from.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>s3</code></br>
+<em>
+<a href="#external-secrets.io/v1.TerraformS3Backend">
+TerraformS3Backend
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>S3 reads the state from an S3 bucket, as written by the <code>s3</code> backend.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>http</code></br>
+<em>
+<a href="#external-secrets.io/v1.TerraformHTTPBackend">
+TerraformHTTPBackend
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HTTP reads the state over HTTP(S), as written by the <code>http</code> backend.
+This also covers state served by the many HTTP-backend implementations,
+such as the GitLab-managed Terraform state.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>kubernetes</code></br>
+<em>
+<a href="#external-secrets.io/v1.TerraformKubernetesBackend">
+TerraformKubernetesBackend
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Kubernetes reads the state from a Kubernetes Secret, as written by the
+<code>kubernetes</code> backend.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="external-secrets.io/v1.TerraformHTTPAuth">TerraformHTTPAuth
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#external-secrets.io/v1.TerraformHTTPBackend">TerraformHTTPBackend</a>)
+</p>
+<p>
+<p>TerraformHTTPAuth selects how to authenticate against an HTTP state backend.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>basic</code></br>
+<em>
+<a href="#external-secrets.io/v1.TerraformHTTPBasicAuth">
+TerraformHTTPBasicAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Basic authenticates with HTTP basic auth.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>bearer</code></br>
+<em>
+<a href="#external-secrets.io/v1.TerraformHTTPBearerAuth">
+TerraformHTTPBearerAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Bearer authenticates with an <code>Authorization: Bearer</code> header.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="external-secrets.io/v1.TerraformHTTPBackend">TerraformHTTPBackend
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#external-secrets.io/v1.TerraformBackend">TerraformBackend</a>)
+</p>
+<p>
+<p>TerraformHTTPBackend points at state served over HTTP(S).</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>url</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>URL the state is fetched from with a GET request. This is the <code>address</code>
+of the Terraform <code>http</code> backend. It must be an http or https URL; store
+validation rejects anything else.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>auth</code></br>
+<em>
+<a href="#external-secrets.io/v1.TerraformHTTPAuth">
+TerraformHTTPAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Auth defines how to authenticate against the endpoint. If not set the
+request is sent unauthenticated.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>caBundle</code></br>
+<em>
+[]byte
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CABundle is a PEM-encoded CA bundle used to validate the endpoint
+certificate.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>caProvider</code></br>
+<em>
+<a href="#external-secrets.io/v1.CAProvider">
+CAProvider
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CAProvider points at a ConfigMap or Secret holding the CA bundle used to
+validate the endpoint certificate.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="external-secrets.io/v1.TerraformHTTPBasicAuth">TerraformHTTPBasicAuth
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#external-secrets.io/v1.TerraformHTTPAuth">TerraformHTTPAuth</a>)
+</p>
+<p>
+<p>TerraformHTTPBasicAuth holds the credentials for HTTP basic auth.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>usernameSecretRef</code></br>
+<em>
+<a href="https://pkg.go.dev/github.com/external-secrets/external-secrets/apis/meta/v1#SecretKeySelector">
+External Secrets meta/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>Username to authenticate with.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>passwordSecretRef</code></br>
+<em>
+<a href="https://pkg.go.dev/github.com/external-secrets/external-secrets/apis/meta/v1#SecretKeySelector">
+External Secrets meta/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>Password to authenticate with.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="external-secrets.io/v1.TerraformHTTPBearerAuth">TerraformHTTPBearerAuth
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#external-secrets.io/v1.TerraformHTTPAuth">TerraformHTTPAuth</a>)
+</p>
+<p>
+<p>TerraformHTTPBearerAuth holds the token for bearer auth.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>tokenSecretRef</code></br>
+<em>
+<a href="https://pkg.go.dev/github.com/external-secrets/external-secrets/apis/meta/v1#SecretKeySelector">
+External Secrets meta/v1.SecretKeySelector
+</a>
+</em>
+</td>
+<td>
+<p>Token sent in the Authorization header.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="external-secrets.io/v1.TerraformKubernetesBackend">TerraformKubernetesBackend
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#external-secrets.io/v1.TerraformBackend">TerraformBackend</a>)
+</p>
+<p>
+<p>TerraformKubernetesBackend points at state stored in a Kubernetes Secret.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>secretSuffix</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>SecretSuffix as configured on the Terraform backend. The state is read
+from the Secret named <code>tfstate-{workspace}-{secretSuffix}</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workspace</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Workspace the state belongs to.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespace</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Namespace the Secret lives in. Only a ClusterSecretStore may set this;
+for a SecretStore, and for a ClusterSecretStore that leaves it empty,
+the namespace of the referring ExternalSecret is used.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="external-secrets.io/v1.TerraformProvider">TerraformProvider
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#external-secrets.io/v1.SecretStoreProvider">SecretStoreProvider</a>)
+</p>
+<p>
+<p>TerraformProvider configures a store to read secrets from the state file
+written by Terraform or OpenTofu.</p>
+<p>The state is treated as a read-only source: the provider only ever fetches
+and parses it, it never writes it back. Values are addressed by root module
+output name; see the provider documentation for the rationale.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>backend</code></br>
+<em>
+<a href="#external-secrets.io/v1.TerraformBackend">
+TerraformBackend
+</a>
+</em>
+</td>
+<td>
+<p>Backend describes where the state file is stored. Exactly one backend
+must be configured.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>sensitiveOnly</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>SensitiveOnly restricts reads to outputs that are marked <code>sensitive = true</code>
+in the Terraform configuration. Requesting a non-sensitive output from a
+store with this enabled behaves as if the output did not exist.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="external-secrets.io/v1.TerraformS3Backend">TerraformS3Backend
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#external-secrets.io/v1.TerraformBackend">TerraformBackend</a>)
+</p>
+<p>
+<p>TerraformS3Backend points at a state object in an S3 (or S3-compatible) bucket.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>bucket</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Bucket holding the state object.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>key</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Key is the full path of the state object inside the bucket, matching the
+<code>key</code> of the Terraform backend. For a non-default workspace this includes
+the workspace key prefix, e.g. <code>env:/staging/prod/terraform.tfstate</code>.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region the bucket lives in.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>endpoint</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Endpoint overrides the S3 endpoint. Set this for S3-compatible object
+stores such as MinIO or Ceph.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>forcePathStyle</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ForcePathStyle addresses buckets as a path element of the endpoint
+instead of a subdomain. Most S3-compatible stores require this.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>auth</code></br>
+<em>
+<a href="#external-secrets.io/v1.AWSAuth">
+AWSAuth
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Auth defines how to authenticate against AWS. If not set, the AWS SDK
+default credential chain is used, which covers IRSA and EKS Pod Identity.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>role</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Role is a Role ARN the provider assumes before reading the object.</p>
+</td>
+</tr>
+</tbody>
 </table>
 <h3 id="external-secrets.io/v1.TokenAuth">TokenAuth
 </h3>

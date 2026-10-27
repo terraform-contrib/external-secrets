@@ -285,6 +285,10 @@ type SecretStoreProvider struct {
 	// OpenBao configures this store to sync secrets using the OpenBao provider.
 	// +optional
 	OpenBao *OpenBaoProvider `json:"openBao,omitempty"`
+
+	// Terraform configures this store to read secrets from Terraform or OpenTofu state
+	// +optional
+	Terraform *TerraformProvider `json:"terraform,omitempty"`
 }
 
 // CAProviderType defines the type of provider for certificate authority.
